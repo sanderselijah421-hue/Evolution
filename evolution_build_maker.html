@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evolution Build Maker</title>
+<style>
+:root{
+  --bg:#090a0d; --panel:#111318; --panel2:#171a20; --line:#2a2e38;
+  --text:#f4f5f7; --muted:#969daa; --accent:#e9edf5; --good:#75d69a;
+  --bad:#ff7070; --shadow:0 14px 40px rgba(0,0,0,.38);
+}
+*{box-sizing:border-box}
+body{margin:0;background:
+ radial-gradient(circle at 15% 0%,rgba(255,255,255,.07),transparent 30%),
+ linear-gradient(180deg,#090a0d,#0b0c10 50%,#08090b);
+ color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+.top{position:sticky;top:0;z-index:10;background:rgba(9,10,13,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topin{max-width:1400px;margin:auto;padding:15px 20px;display:flex;align-items:center;gap:14px}
+.logo{font-weight:900;letter-spacing:2px;font-size:19px}
+.logo span{color:#aeb5c2}
+.top .spacer{flex:1}
+.btn{border:1px solid var(--line);background:#151820;color:var(--text);padding:9px 12px;border-radius:9px}
+.btn:hover{background:#1d212a}
+.btn.primary{background:#e9edf5;color:#090a0d;border-color:#e9edf5;font-weight:800}
+.wrap{max-width:1400px;margin:auto;padding:22px 20px 50px}
+.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:18px}
+h1{font-size:30px;margin:0 0 4px;letter-spacing:-1px}
+.sub{color:var(--muted)}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 330px;gap:16px}
+.panel{background:linear-gradient(180deg,rgba(23,26,32,.98),rgba(15,17,22,.98));border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.panel h2{font-size:14px;margin:0;padding:15px 16px;border-bottom:1px solid var(--line);letter-spacing:.8px;text-transform:uppercase}
+.body{padding:15px 16px}
+.stat{margin-bottom:13px}
+.statrow{display:flex;justify-content:space-between;margin-bottom:6px}
+.statname{font-weight:800}
+.num{color:var(--muted)}
+.range{width:100%;accent-color:#e9edf5}
+.search{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#0c0e12;color:var(--text);outline:none}
+.search:focus{border-color:#626a78}
+.tabs{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.tab{padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:#101319;color:#b9bfca}
+.tab.active{background:#e9edf5;color:#0b0c0f;border-color:#e9edf5;font-weight:800}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:10px;max-height:calc(100vh - 255px);overflow:auto;padding-right:3px}
+.card{border:1px solid var(--line);background:#101218;border-radius:11px;padding:12px;transition:.12s}
+.card:hover{transform:translateY(-1px);border-color:#4b5260}
+.card.selected{border-color:#d8dee8;box-shadow:0 0 0 1px rgba(216,222,232,.2) inset}
+.card.locked{opacity:.48}
+.ctop{display:flex;justify-content:space-between;gap:8px}
+.cname{font-weight:850}
+.badge{font-size:10px;padding:3px 6px;border-radius:999px;background:#20242d;color:#bfc5cf;white-space:nowrap}
+.req{margin-top:8px;font-size:12px;color:#bfc5cf}
+.desc{margin-top:8px;color:#8f96a2;font-size:12px}
+.cardbtn{margin-top:10px;width:100%;padding:7px;border-radius:7px;border:1px solid var(--line);background:#171a21;color:#e9edf5}
+.card.selected .cardbtn{background:#e9edf5;color:#090a0d}
+.summary{position:sticky;top:76px}
+.summaryline{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #222630}
+.summaryline:last-child{border-bottom:0}
+.small{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;margin:4px 4px 0 0;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#11141a}
+.valid{color:var(--good)} .invalid{color:var(--bad)}
+.selected-list{max-height:260px;overflow:auto}
+.empty{color:var(--muted);padding:20px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+.footer{margin-top:16px;color:#707783;font-size:11px}
+@media(max-width:1050px){.grid{grid-template-columns:250px 1fr}.summary{position:static;grid-column:1/-1}.cards{max-height:none}}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.hero{display:block}.topin{padding:12px}.wrap{padding:15px 12px}.cards{grid-template-columns:1fr}}
+</style>
+
+<style>
+.buildInfo{display:flex;justify-content:space-between;gap:16px;align-items:end;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.buildInfo label{display:block;font-size:10px;letter-spacing:.14em;opacity:.55;margin-bottom:6px}
+.buildInfo input{background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.2);color:inherit;font-size:20px;padding:6px 2px;outline:none}
+.pointBox{min-width:125px;text-align:right}
+.pointBox span,.pointBox small{display:block;font-size:10px;opacity:.55;letter-spacing:.1em}
+.pointBox b{font-size:25px}
+.tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.08);overflow:auto}
+.tabs .tab{border:0;background:transparent;color:inherit;padding:10px 16px;cursor:pointer;border-radius:6px;opacity:.65}
+.tabs .tab.active{opacity:1;background:rgba(255,255,255,.08)}
+.summaryTab{padding:24px;max-width:900px}
+.summaryHeader{display:flex;justify-content:space-between;align-items:center}
+.summaryStats{display:grid;grid-template-columns:repeat(5,minmax(90px,1fr));gap:8px;margin:18px 0}
+.summaryStats div{padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:7px}
+.summaryStats span,.summaryStats b{display:block}
+.summaryStats span{font-size:11px;opacity:.55}
+.summaryStats b{font-size:22px;margin-top:5px}
+.selectedList{display:flex;flex-wrap:wrap;gap:7px}
+.selectedList span{padding:7px 10px;border:1px solid rgba(255,255,255,.12);border-radius:6px}
+@media(max-width:700px){.summaryStats{grid-template-columns:repeat(2,1fr)}.buildInfo{align-items:center}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="topin">
+    <div class="logo">OVERLOCK <span>BUILD MAKER</span></div>
+    <div class="spacer"></div>
+    <button class="btn" id="resetBtn">Reset</button>
+    <button class="btn primary" id="shareBtn">Share Build</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1 id="buildTitle">Untitled Evolution Build</h1>
+      <div class="sub">Deepwoken-style planner using the exported EGO LOCK Trello data.</div>
+    </div>
+    <input id="buildName" class="search" style="max-width:310px" placeholder="Build name">
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Stats <span class="small" style="float:right">190 POINTS</span></h2>
+      <div class="body" id="stats"></div>
+      <div class="body">
+        <div class="small">Level</div>
+        <input id="level" type="range" min="1" max="20" value="20" class="range">
+        <div class="statrow"><span>Level</span><b id="levelVal">20</b></div>
+        <div class="small">You have <b>190 total stat points</b> to distribute across Offense, Defense, Speed, Intelligence, and Dribbling. Each stat can go up to 100.</div>
+        <div class="summaryline" style="margin-top:10px"><span>Points remaining</span><b id="pointsRemaining">190</b></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Abilities & Cards</h2>
+      <div class="body">
+        <input id="search" class="search" placeholder="Search cards, moves, or descriptions...">
+        <div class="buildInfo" id="buildInfo">
+      <div><label>BUILD NAME</label><input id="buildName" placeholder="Evolution Build"></div>
+      <div class="pointBox"><span>STAT POINTS</span><b id="pointsRemaining">190</b><small>remaining</small></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="stats">Stats</button>
+      <button class="tab" data-tab="cards">Cards</button>
+      <button class="tab" data-tab="moves">Moves</button>
+      <button class="tab" data-tab="wildcards">Wildcards</button>
+      <button class="tab" data-tab="summary">Summary</button>
+    </div>
+        <div class="cards" id="cards"></div>
+      </div>
+    </section>
+
+    <aside class="panel summary">
+      <h2>Build Summary</h2>
+      <div class="body">
+        <div class="summaryline"><span>Level</span><b id="sumLevel">20</b></div>
+        <div class="summaryline"><span>Total stat value</span><b id="sumStats">0</b></div>
+        <div style="margin-top:12px" class="small">Stats</div>
+        <div id="sumStatPills"></div>
+        <div style="margin-top:14px" class="small">Selected</div>
+        <div id="selectedList" class="selected-list" style="margin-top:7px"></div>
+        <div style="margin-top:14px" class="small">Requirement check</div>
+        <div id="reqStatus" style="margin-top:7px"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="footer">
+    Source: the uploaded Trello JSON export for the EGO LOCK board. Weapon-related and lootbox/item sections are not included in this build maker.
+  </div>
+</main>
+
+<script>
+const CARDS = [{"id":"6a9264fbfbcf1d119c1414dd","name":"Longreach","desc":"(same jump height as jumpboost from energy pills, stacks with jumpboost from energy pills)","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c1414da","name":"Ambidexterity","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c141501","name":"Supreme Physicality","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c14150a","name":"Villainous Soccer","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c141510","name":"Adaptability","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c14151f","name":"Sturdy Footing","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c141522","name":"Direct Shot","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c141525","name":"Curveable","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c14154c","name":"Luck","desc":"","category":"Wildcards"},{"id":"6a9276c7ccc8df4acf110249","name":"Creativity","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c141552","name":"Backheel Shot","desc":"","category":"Wildcards"},{"id":"6a9264fbfbcf1d119c141513","name":"Juggle (10 Speed)","desc":"10 Speed - the user kick the ball slightly to the direction hes going","category":"Moves"},{"id":"6a9264fbfbcf1d119c14153d","name":"Right Stepover (40 speed)","desc":"40 Speed - the user does a stepover and dashes to the right","category":"Moves"},{"id":"6a9264fbfbcf1d119c141528","name":"Left Stepover (30 Speed)","desc":"30 Speed - the user does a stepover the ball and dashes to the left","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415d6","name":"Left/Right Mach-Cut-in (50 Speed)","desc":"50 Speed - the player first does a fast dash to the left/right and then does another one to the right/left","category":"Moves"},{"id":"6a9264fbfbcf1d119c141546","name":"High Speed Dash (100 Speed)","desc":"100 Speed - the player dashes forward with high speeds doesn’t work with muscle memory","category":"Moves"},{"id":"6a9264fbfbcf1d119c14155e","name":"DRIBBLING","desc":"Dribble throught defense which can create oppurturnity for youserlf or you teammates","category":"Moves"},{"id":"6a9264fbfbcf1d119c14156a","name":"Left/Right Chop (10 Dribbling)","desc":"10 Dribble - the player chops the ball to the right/left (has a short amount of iframes)","category":"Moves"},{"id":"6a9264fbfbcf1d119c141570","name":"Scissors (30 Dribbling)","desc":"30 Dribble - the player steps over the ball multiple times (has iframes) (can ankle break)","category":"Moves"},{"id":"6a9264fbfbcf1d119c141579","name":"Heel Flick (40 Dribbling)","desc":"40 Dribble - the player flicks the ball above himself","category":"Moves"},{"id":"6a9264fbfbcf1d119c14157f","name":"Roulette (50 Dribbling)","desc":"50 Dribble - the player does a roulette while moving forward (has iframes) (can ankle break)","category":"Moves"},{"id":"6a9264fbfbcf1d119c141588","name":"Monster trap (60 Dribbling)","desc":"60 Dribble - the player traps the ball (can ankle break) (has a short amount of iframes) (the trapped ball does not end up in the players possesion)","category":"Moves"},{"id":"6a9264fbfbcf1d119c14158b","name":"Nutmeg (100 Dribbling)","desc":"100 Dribble - the player nutmegs the opponent infront of him stunning him and getting past him easily","category":"Moves"},{"id":"6a9264fbfbcf1d119c141597","name":"OFFENSE","desc":"HIGH POWERFULL KICK (Is offense buddy what you think that gon be blud.)","category":"Moves"},{"id":"6a9264fbfbcf1d119c14159a","name":"Header (10 Offense)","desc":"10 Offense - the player headers the ball (power depends on the speed of the ball that he hit) (scales with offence)","category":"Moves"},{"id":"6a9264fbfbcf1d119c14159d","name":"Rabona (30 Offense)","desc":"30 Offense - the player does a rabona slowly lobbing the player infront of him","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415a0","name":"Bicycle Kick (40 Offense)","desc":"40 Offense - the player does a bycicle kick that goes straight (scales with offence)","category":"Moves"},{"id":"6a9271023275d803cf8fd415","name":"Shield (50 Offense)","desc":"50 Offense - The player simply pushes the opponent backward a bit. (If you have Super Physicality Wild-Card, the opponent gets knocked over completely.)","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415a3","name":"Strong Kick (50 Offense)","desc":"50 Offense - the player does a strong kick that slightly goes up","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415a6","name":"Grasscutter Shot (60 offense)","desc":"60 Offense - the player does a strong shot that goes perfectly on the ground","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415a9","name":"Chop Shot (100 Offense)","desc":"100 Offense - the player chops the ball with insane power to make it a shot (Only shoots to the left side of your body)","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415af","name":"Unyielding Will (10 Defense)","desc":"10 Defense - the player gains a 10s buff of being impossible to ankle break","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415b2","name":"Clear Shot (30 Defense)","desc":"30 Defense - the player shoots the ball very high and very strong clearing the ball","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415b5","name":"Dazing Clash (40 Defense)","desc":"40 Defense - the user teleports to an opponent he aims at and dazes him making his camera change direction (has a short range)","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415b8","name":"Tackle Trap (50 Defense)","desc":"50 Defense - the player slide tackles but instead of stealing the ball he traps it (can only be used on a loose ball) (cannot steal with this move)","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415bb","name":"Standing Tackle (60 Defense)","desc":"60 Defense - the player tackles an opponent while standing (cannot be used on a loose ball)","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415be","name":"Defender Instinct (100 Defense)","desc":"100 Defense - the user creates a field around himself heavily slowing any opponents near him","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415c4","name":"Ball Leap (10 Intelligence)","desc":"10 Intel - the player leaps into the sky with the ball (has no iframes)","category":"Moves"},{"id":"6a927443cf89f84513560bdf","name":"Left/Right Touch (20 Intelligence)","desc":"20 Intel - An on/off the ball skill that knocks the ball slightly to the left or right.","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415c7","name":"Antony Spin (30 Intelligence)","desc":"30 Intel - the player catches the ball if its near him and spins (has a very short range) (has a very short amount of iframes)","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415ca","name":"Back Trap (40 Intelligence)","desc":"40 Intel - the player traps the ball with his back making it go to his right side","category":"Moves"},{"id":"6a9264fbfbcf1d119c141708","name":"Left Body Feint (50 Intelligence)","desc":"doesnt proc evasion or muscle memory","category":"Moves"},{"id":"6a9264fbfbcf1d119c14170b","name":"Right Body Feint (60 Intelligence)","desc":"doesnt proc evasion or muscle memory","category":"Moves"},{"id":"6a9264fbfbcf1d119c1415cd","name":"Off Ball Movement (100 Intelligence)","desc":"100 Intel - the user ankle breaks the nearest opponent to him (can be countered by standing still) (stacks with injured/broken springs/sleep)","category":"Moves"},{"id":"6a9264fbfbcf1d119c141717","name":"Pack of cards","desc":"max level is 20","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415dc","name":"Defense Breaker (70 Offence 20 Speed)","desc":"Nullifies defender's instinct.","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415d9","name":"Punishment (50 Offence 20 Speed)","desc":"teleports to the opponent who tackled the user","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415df","name":"Field-To-Field Clear Shot (40 Defense 20 Offence)","desc":"grants a massive shot power boost in the user’s side of the field","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415e2","name":"Off Ball Movements (40 Speed 20 Intel)","desc":"grants a speed boost without the ball","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415e8","name":"Precision Dribble (50 Speed 30 Dribble)","desc":"grants a speed boost when having the ball","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415e5","name":"Tackle Drifter (60 Defense 10 Intelligence 10 Speed)","desc":"allows the user to change the direction of which he’s going when tackling","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415eb","name":"Evolved Eyes","desc":"allows the user to see iframes","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415ee","name":"Dirty Dribbling","desc":"when clicking right click while having a shot charged up the user will kick the dirt in the opponents face and blind them also granting them a speed boost (usable 3 times before 10 second cooldown if sucessfully hit the first one)","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415f1","name":"Dazing Defender","desc":"the users tackle dazes opponents upon tackling them","category":"Cards"},{"id":"6a9264fbfbcf1d119c1415f4","name":"Slippery Ball","desc":"if the users shot gets blocked , the ball will go up instead of the direction the opponent aimed at","category":"Cards"},{"id":"6a9264fbfbcf1d119c1416d8","name":"Strong Ankles (10 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14170e","name":"Discipline (10 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141711","name":"Clearance Charge (10 Defense)","desc":"10 Defense - works but it has a delay on the charge speed boost","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c1416cf","name":"Rabbit (10 Defence)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14171a","name":"Clearance kick (20 Offense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141621","name":"Slide Recovery (20 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14169c","name":"Counter Play (30 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14171d","name":"Run it back (50 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141720","name":"Thief (50 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141627","name":"Air Tackle (50 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14161e","name":"Back Up (60 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14167b","name":"Give Up (70 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c1416d5","name":"It's Mine Now (80 Defence)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141678","name":"Strong Tackle (90 Defense)","desc":"","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14160f","name":"Tackling Technique (100 Defense)","desc":"makes the user’s tackle go way further","category":"DEFENSE CARDS"},{"id":"6a9264fbfbcf1d119c1416c6","name":"Deciding Shot (10 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c1416c9","name":"Direct Shooter (10 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141624","name":"Carefree Kicks (10 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c1416cc","name":"Territory (20 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141618","name":"Path-To-Glory (30 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141612","name":"Sniper (40 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14162a","name":"Shooting Ace (50 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c14162d","name":"Aerial Ace (60 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141630","name":"Precision Aim (70 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141633","name":"Power Shot (80 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141636","name":"Deadly Shot (90 Offence)","desc":"","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c141615","name":"Mid-Range-Power-Shot (100 offence)","desc":"makes the users shot very powerful if shot in the mid range goal area","category":"OFFENSE CARDS"},{"id":"6a9264fbfbcf1d119c1415f7","name":"Quick Feet (10 Speed)","desc":"the user gains a speed boost after tackling","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141723","name":"Warm up (10 Speed)","desc":"10 Speed","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141684","name":"Acceleration Extender (10 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141687","name":"Double Acceleration (20 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141726","name":"Muscle Memory (10 Speed)","desc":"10 Speed","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c1415fa","name":"Winger (30 Speed)","desc":"grants a speed boost on the wings","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c14167e","name":"Goal hanger (40 Speed i need this)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141681","name":"Cherry-Picker (50 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141699","name":"Breathing Exercise (60 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c14168d","name":"Sprinter (70 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141690","name":"TrackStar (80 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141693","name":"LightWeight (90 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c141696","name":"GodSpeed (100 Speed)","desc":"","category":"SPEED CARDS"},{"id":"6a9264fbfbcf1d119c1416a5","name":"Chemical Reaction (10 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c1416a2","name":"Psyched up (10 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c1416a8","name":"Positioning (30 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c14161b","name":"Enhanced Vision (40 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c141609","name":"Midfielder (50 intelligence)","desc":"grants a speed boost in the middle of the field","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c14169f","name":"Ball Fetcher (60 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c1416c3","name":"Heartbeat (80 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c1416d2","name":"Pressure (90 Intelligence)","desc":"","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c14160c","name":"Spatial Awareness (100 intelligence)","desc":"the user is able to see where the ball will land","category":"INTEL CARDS"},{"id":"6a9264fbfbcf1d119c1416b7","name":"Fast Kick (10 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416c0","name":"Ankle Breaker (10 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416ae","name":"Confidence (20 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416bd","name":"Fluidity (20 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416b1","name":"Injured (30 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416ab","name":"Sleep (40 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416b4","name":"Blackout (50 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1415fd","name":"Feint (60 Dribbling)","desc":"allows the player to feint the shot instead of shooting","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c1416ba","name":"Dexterity (70 Dribbling)","desc":"","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c141600","name":"Evasion (80 Dribbling)","desc":"the player gets a speed boost after using a dribbling move","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c141603","name":"Balance (90 Dribbling)","desc":"the user gains a speed boost after kicking the ball","category":"DRIBBLING CARDS"},{"id":"6a9264fbfbcf1d119c141606","name":"Quick Reflexes (100 Dribbling)","desc":"the user has a 10% chance to dodge a tackle instead of the opponent stealing the ball","category":"DRIBBLING CARDS"}];
+const STATS = ["Offense","Defense","Speed","Intelligence","Dribbling"];
+const STAT_ALIASES = {
+  offense:"Offense", offence:"Offense",
+  defense:"Defense", defence:"Defense",
+  speed:"Speed",
+  intelligence:"Intelligence", intel:"Intelligence",
+  dribbling:"Dribbling", dribble:"Dribbling", dribble:"Dribbling"
+};
+const MAX_STAT_POINTS = 190;
+const MAX_STAT = 100;
+const state = {
+  name:"",
+  level:20,
+  stats:{Offense:0,Defense:0,Speed:0,Intelligence:0,Dribbling:0},
+  selected:new Set(),
+  filter:"All",
+  query:""
+};
+
+function parseReq(text){
+  const req=[];
+  const re=/(\d+)\s*(Offense|Offence|Defense|Defence|Speed|Intelligence|Intel|Dribbling|Dribble)\b/gi;
+  let m;
+  while((m=re.exec(text||""))){
+    const stat=STAT_ALIASES[m[2].toLowerCase()];
+    if(stat) req.push({stat, value:Number(m[1])});
+  }
+  // Remove duplicate exact requirements.
+  return req.filter((x,i,a)=>i===a.findIndex(y=>y.stat===x.stat&&y.value===x.value));
+}
+
+const CARD_DATA = CARDS.map(c=>({
+  ...c,
+  req:parseReq((c.name||"")+" "+(c.desc||""))
+}));
+
+const categories=["All",...new Set(CARD_DATA.map(c=>c.category))];
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+function cardUnlocked(c){
+  return c.req.every(r=>state.stats[r.stat]>=r.value);
+}
+
+function totalStats(){
+  return Object.values(state.stats).reduce((a,b)=>a+b,0);
+}
+
+function renderStats(){
+  const box=document.getElementById("stats");
+  const total=totalStats();
+  box.innerHTML=STATS.map(s=>{
+    const otherTotal=total-state.stats[s];
+    const maxForThis=Math.min(MAX_STAT, MAX_STAT_POINTS-otherTotal);
+    return `
+    <div class="stat">
+      <div class="statrow"><span class="statname">${s}</span><span class="num" id="n-${s}">${state.stats[s]}</span></div>
+      <input class="range" type="range" min="0" max="${Math.floor(maxForThis/10)*10}" step="10" value="${Math.floor(Math.min(state.stats[s],maxForThis)/10)*10}" data-stat="${s}">
+    </div>`;
+  }).join("");
+  box.querySelectorAll("input").forEach(el=>{
+    el.addEventListener("input",e=>{
+      state.stats[e.target.dataset.stat]=Number(e.target.value);
+      renderAll();
+    });
+  });
+}
+
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=categories.map(c=>
+    `<button class="tab ${state.filter===c?"active":""}" data-cat="${esc(c)}">${esc(c)}</button>`
+  ).join("");
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+    state.filter=b.dataset.cat; renderCards();
+  });
+}
+
+function renderCards(){
+  const q=state.query.toLowerCase();
+  const shown=CARD_DATA.filter(c=>{
+    const categoryOK=state.filter==="All"||c.category===state.filter;
+    const text=(c.name+" "+c.desc+" "+c.category).toLowerCase();
+    return categoryOK && (!q||text.includes(q));
+  });
+  const box=document.getElementById("cards");
+  if(!shown.length){box.innerHTML='<div class="empty">No matching cards.</div>';return}
+  box.innerHTML=shown.map(c=>{
+    const ok=cardUnlocked(c);
+    const selected=state.selected.has(c.id);
+    const req=c.req.length
+      ? c.req.map(r=>`${r.value} ${r.stat}`).join(" • ")
+      : "No stat requirement stated in the export";
+    return `<article class="card ${selected?"selected":""} ${ok?"":"locked"}">
+      <div class="ctop"><div class="cname">${esc(c.name)}</div><span class="badge">${esc(c.category)}</span></div>
+      <div class="req ${ok?"valid":"invalid"}">${esc(req)}</div>
+      ${c.desc?`<div class="desc">${esc(c.desc)}</div>`:""}
+      <button class="cardbtn" data-id="${esc(c.id)}">${selected?"Remove":"Add to Build"}</button>
+    </article>`;
+  }).join("");
+  box.querySelectorAll(".cardbtn").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id;
+    if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+    renderAll();
+  });
+}
+
+function renderSummary(){
+  document.getElementById("sumLevel").textContent=state.level;
+  document.getElementById("levelVal").textContent=state.level;
+  const total=totalStats();
+  document.getElementById("sumStats").textContent=total;
+  document.getElementById("pointsRemaining").textContent=MAX_STAT_POINTS-total;
+  document.getElementById("sumStatPills").innerHTML=STATS.map(s=>`<span class="pill">${s}: ${state.stats[s]}</span>`).join("");
+  const selected=[...state.selected].map(id=>CARD_DATA.find(c=>c.id===id)).filter(Boolean);
+  document.getElementById("selectedList").innerHTML=selected.length
+    ? selected.map(c=>`<div class="summaryline"><span>${esc(c.name)}</span><span class="${cardUnlocked(c)?"valid":"invalid"}">${cardUnlocked(c)?"OK":"LOCKED"}</span></div>`).join("")
+    : '<div class="empty">Nothing selected yet.</div>';
+  const locked=selected.filter(c=>!cardUnlocked(c));
+  document.getElementById("reqStatus").innerHTML=selected.length
+    ? (locked.length?`<span class="invalid">${locked.length} selected card(s) do not meet their listed stat requirements.</span>`
+      : `<span class="valid">All selected cards meet their listed requirements.</span>`)
+    : '<span class="small">Add cards to check them.</span>';
+}
+
+function saveToHash(){
+  const payload={
+    n:state.name,l:state.level,s:state.stats,c:[...state.selected]
+  };
+  location.hash=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+}
+function loadFromHash(){
+  if(!location.hash)return;
+  try{
+    const p=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1)))));
+    state.name=p.n||""; state.level=Number(p.l)||20;
+    state.stats={...state.stats,...(p.s||{})};
+    // Keep imported/shared builds inside the 190-point budget.
+    let overflow=totalStats();
+    if(overflow>MAX_STAT_POINTS){
+      const scale=MAX_STAT_POINTS/overflow;
+      STATS.forEach(s=>state.stats[s]=Math.floor(state.stats[s]*scale));
+    }
+    STATS.forEach(s=>state.stats[s]=Math.max(0,Math.min(MAX_STAT,Math.floor((state.stats[s]||0)/10)*10)));
+    state.selected=new Set(p.c||[]);
+    document.getElementById("buildName").value=state.name;
+  }catch(e){}
+}
+
+function renderAll(){
+  renderStats(); renderTabs(); renderCards(); renderSummary();
+  document.getElementById("buildTitle").textContent=state.name||"Untitled Evolution Build";
+}
+
+document.getElementById("search").addEventListener("input",e=>{
+  state.query=e.target.value; renderCards();
+});
+document.getElementById("level").addEventListener("input",e=>{
+  state.level=Number(e.target.value); renderSummary();
+});
+document.getElementById("buildName").addEventListener("input",e=>{
+  state.name=e.target.value; document.getElementById("buildTitle").textContent=state.name||"Untitled Evolution Build";
+});
+document.getElementById("shareBtn").onclick=()=>{
+  saveToHash();
+  navigator.clipboard?.writeText(location.href).then(()=>alert("Build link copied!")).catch(()=>alert("Build saved in the URL. Copy the address bar to share it."));
+};
+document.getElementById("resetBtn").onclick=()=>{
+  if(!confirm("Reset this build?"))return;
+  state.name="";state.level=20;state.stats={Offense:0,Defense:0,Speed:0,Intelligence:0,Dribbling:0};state.selected=new Set();
+  document.getElementById("buildName").value="";
+  document.getElementById("search").value="";
+  state.query="";state.filter="All";renderAll();history.replaceState(null,"",location.pathname);
+};
+loadFromHash();
+document.getElementById("level").value=state.level;
+renderAll();
+</script>
+
+<script>
+(function(){
+  const tabs = document.querySelectorAll('#tabs .tab');
+  const statsEl = document.getElementById('stats');
+  const searchEl = document.querySelector('#search, input[placeholder*="Search"], input[placeholder*="search"]');
+  const categoryEl = document.querySelector('#categories, .categories');
+  const selectedEl = document.querySelector('#selected, .selected');
+
+  function showTab(name){
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    const all = document.querySelectorAll('[data-build-tab]');
+    all.forEach(x => x.style.display = x.dataset.buildTab === name ? '' : 'none');
+    if(name === 'stats' && statsEl) statsEl.style.display = '';
+    document.body.dataset.activeTab = name;
+    if(window.renderAll) window.renderAll();
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+
+  // Mark major existing sections where possible.
+  if(statsEl) statsEl.dataset.buildTab='stats';
+
+  // A lightweight summary panel, generated from the current state.
+  let summary = document.getElementById('overlockSummaryTab');
+  if(!summary){
+    summary = document.createElement('div');
+    summary.id='overlockSummaryTab';
+    summary.dataset.buildTab='summary';
+    summary.className='summaryTab';
+    const host = statsEl ? statsEl.parentElement.parentElement : document.body;
+    host.appendChild(summary);
+  }
+
+  function refreshSummary(){
+    if(!summary || !window.state) return;
+    const s=window.state.stats||{};
+    const total=Object.values(s).reduce((a,b)=>a+b,0);
+    const selected=window.state.selected ? [...window.state.selected] : [];
+    summary.innerHTML = `
+      <div class="summaryHeader"><h2>Build Summary</h2><span>${190-total} points left</span></div>
+      <div class="summaryStats">
+        ${Object.entries(s).map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join('')}
+      </div>
+      <h3>Selected</h3>
+      <div class="selectedList">${selected.length ? selected.map(x=>`<span>${x}</span>`).join('') : '<em>No cards or moves selected.</em>'}</div>`;
+  }
+
+  const oldRenderAll=window.renderAll;
+  if(oldRenderAll){
+    window.renderAll=function(){
+      oldRenderAll();
+      refreshSummary();
+    };
+  }
+
+  showTab('stats');
+})();
+</script>
+
+<script>
+(function(){
+  const input=document.getElementById('buildName');
+  if(!input) return;
+  input.addEventListener('input',()=>{ if(window.state) window.state.name=input.value; });
+})();
+</script>
+</body>
+</html>
